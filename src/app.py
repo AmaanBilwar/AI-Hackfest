@@ -2,7 +2,9 @@ import os
 import pymongo
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from google import genai
 from datetime import datetime
+# from openai import OpenAI
 from dotenv import load_dotenv
 from utils.directions import get_directions
 from utils.gemini_utils import extract_origin_destination
@@ -11,6 +13,10 @@ from utils.gemini_utils import extract_origin_destination
 load_dotenv()
 
 # Initialize API key
+# Initialize API keys
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# if not OPENAI_API_KEY:
+#     print("Warning: OPENAI_API_KEY not found in environment variables")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     print("Warning: GEMINI_API_KEY not found in environment variables")
@@ -52,6 +58,9 @@ def save_transcript():
         result = collection.insert_one(document)
 
         print(f"Saved transcript to MongoDB with ID: {result.inserted_id}")
+        print(f"Text: {text}")
+        print(f"Timestamp: {timestamp}")
+        print(f"User ID: {user_id}")
 
         return jsonify({
             'success': True,
