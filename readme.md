@@ -57,3 +57,7 @@ This project demonstrates real-time audio transcription using the Gemini API. It
 - The Gemini API has rate limits, so be mindful of how frequently you send audio chunks
 - Audio quality and transcription accuracy depend on various factors like microphone quality and background noise
 - This is a demonstration project and may need additional error handling and optimization for production use
+
+
+## Helpful Resources
+1. text to speech model [here](https://huggingface.co/OuteAI/Llama-OuteTTS-1.0-1B)
