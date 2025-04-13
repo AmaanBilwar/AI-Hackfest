@@ -163,8 +163,13 @@ def get_directions_route():
                 return jsonify(fallback_directions)
             
             return jsonify(directions), 400
+        
+        # The flag is already set in the updated get_directions function, but we'll ensure it's set here as well
+        if "includes_landmarks" not in directions:
+            directions["includes_landmarks"] = True
             
         print(f"Successfully retrieved directions with {len(directions.get('steps', []))} steps")
+        print(f"Directions include landmarks: {directions.get('includes_landmarks', False)}")
         
         # Save directions to MongoDB
         try:
