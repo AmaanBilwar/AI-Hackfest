@@ -13,6 +13,7 @@ SafeStep is an intelligent navigation assistant that provides accessible and det
    * [🚀 Getting Started](#-getting-started)
       + [Frontend Setup](#frontend-setup)
       + [Backend Setup](#backend-setup)
+      + [Google API Setup](#google-api-setup)
    * [🔧 API Endpoints](#-api-endpoints)
    * [📦 Project Structure](#-project-structure)
    * [🤝 Contributing](#-contributing)
@@ -122,6 +123,50 @@ MONGO_URI=your_mongodb_uri
 ```bash
 python app.py
 ```
+### Google API Setup
+
+1. **Go to Google Cloud Console**
+   - Visit [https://console.cloud.google.com/](https://console.cloud.google.com/)
+   - Sign in with your Google account
+
+2. **Create or Select a Project**
+   - Click on the project dropdown at the top of the page
+   - Click "New Project" or select an existing one
+   - Give your project a name (e.g., "SafeStep")
+   - Click "Create"
+
+3. **Generate an API Key**
+   - In the left sidebar, navigate to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "API Key"
+   - Your new API key will be displayed - copy it to a secure location
+
+4. **Restrict Your API Key** (Recommended for security)
+   - In the API keys section, find your newly created key and click "Edit"
+   - Under "Application restrictions", choose appropriate options (HTTP referrers, IP addresses, etc.)
+   - Under "API restrictions", select the specific APIs you want to use
+   - Click "Save"
+
+5. **Enable Required APIs**
+   - In the left sidebar, go to "APIs & Services" > "Library"
+   - Search for and enable each API:
+     - Maps Datasets API: Allows you to programmatically create and manage custom map features
+     - Street View Publish API: Enables publishing 360° photos to Google Street View
+     - Maps Embed API: Lets you embed Google Maps in web pages using a simple HTML tag
+     - Maps JavaScript API: Provides interactive maps with custom content and imagery for websites
+     - Maps Static API: Delivers map images via HTTP requests without requiring JavaScript
+     - Places API: Offers detailed information about points of interest, businesses, and geographical locations
+     - Geocoding API: Converts addresses to geographic coordinates and vice versa
+     - Geolocation API: Determines a user's location based on network signals
+     - Directions API: Provides route planning and navigation instructions between locations
+     - Routes API: Offers optimized routing for complex journeys and delivery planning
+     - Distance Matrix API: Calculates travel times and distances between multiple origins and destinations
+     - Maps SDK for Android: Integrates Google Maps functionality into Android applications
+     - Maps SDK for iOS: Integrates Google Maps functionality into iOS applications
+
+6. **Set Up Billing** (Required for most Google APIs)
+   - Many APIs require billing to be enabled
+   - Go to "Billing" in the left sidebar
+   - Set up a billing account if you haven't already
 
 ## 🔧 API Endpoints
 
