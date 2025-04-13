@@ -2,6 +2,24 @@
 
 SafeStep is an intelligent navigation assistant that provides accessible and detailed directions using natural language processing and real-time location data. It helps users navigate to their destinations with clear, step-by-step instructions and voice guidance.
 
+## Table of Contents
+
+- [SafeStep](#safestep)
+   * [🚀 Features](#-features)
+   * [🛠️ Tech Stack](#-tech-stack)
+      + [Frontend](#frontend)
+      + [Backend](#backend)
+   * [📋 Prerequisites](#-prerequisites)
+   * [🚀 Getting Started](#-getting-started)
+      + [Frontend Setup](#frontend-setup)
+      + [Backend Setup](#backend-setup)
+   * [🔧 API Endpoints](#-api-endpoints)
+   * [📦 Project Structure](#-project-structure)
+   * [🤝 Contributing](#-contributing)
+   * [📝 License](#-license)
+   * [👥 Authors](#-authors)
+   * [🙏 Acknowledgments](#-acknowledgments)
+
 ## 🚀 Features
 
 - Natural language processing for direction requests
