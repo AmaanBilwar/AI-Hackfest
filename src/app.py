@@ -1,22 +1,24 @@
 import os
 import pymongo
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from google import genai
 from datetime import datetime
-# from openai import OpenAI
+from openai import OpenAI
 from dotenv import load_dotenv
 from utils.directions import get_directions
 from utils.gemini_utils import extract_origin_destination
+import io
 
 # Load environment variables
 load_dotenv()
 
-# Initialize API key
 # Initialize API keys
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# if not OPENAI_API_KEY:
-#     print("Warning: OPENAI_API_KEY not found in environment variables")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    print("Warning: OPENAI_API_KEY not found in environment variables")
+else:
+    openai_client = OpenAI(api_key=OPENAI_API_KEY)
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     print("Warning: GEMINI_API_KEY not found in environment variables")
@@ -80,27 +82,88 @@ def save_transcript():
 
 @app.route('/api/get-directions', methods=['POST'])
 def get_directions_route():
-    data = request.json
-    user_input = data.get("text")
-    current_location = data.get("currentLocation")
+    try:
+        data = request.json
+        if not data:
+            print("Error: No JSON data received in request")
+            return jsonify({"error": "No JSON data received"}), 400
+            
+        user_input = data.get("text")
+        current_location = data.get("currentLocation")
 
-    if not user_input:
-        return jsonify({"error": "Missing 'text' field in request"}), 400
+        if not user_input:
+            print("Error: Missing 'text' field in request")
+            return jsonify({"error": "Missing 'text' field in request"}), 400
 
-    # Extract destination from user input
-    origin, destination = extract_origin_destination(user_input)
+        print(f"Received request for directions with text: {user_input}")
+        if current_location:
+            print(f"Current location: {current_location}")
 
-    if not destination:
-        return jsonify({"error": "Could not extract destination"}), 400
+        # Extract destination from user input
+        origin, destination = extract_origin_destination(user_input)
+        print(f"Extracted origin: {origin}, destination: {destination}")
 
-    # Use current location if available, otherwise use extracted origin
-    if current_location:
-        origin = f"{current_location['lat']},{current_location['lng']}"
-    elif not origin:
-        origin = "Current Location"  # Default to current location if not specified
+        if not destination:
+            print("Error: Could not extract destination from user input")
+            return jsonify({"error": "Could not extract destination"}), 400
 
-    directions = get_directions(origin, destination)
-    return jsonify(directions)
+        # Use current location if available, otherwise use extracted origin
+        if current_location:
+            origin = f"{current_location['lat']},{current_location['lng']}"
+            print(f"Using current location as origin: {origin}")
+        elif not origin:
+            origin = "Current Location"  # Default to current location if not specified
+            print("Using 'Current Location' as origin")
+
+        print(f"Getting directions from {origin} to {destination}")
+        directions = get_directions(origin, destination)
+        
+        if "error" in directions:
+            print(f"Error getting directions: {directions['error']}")
+            return jsonify(directions), 400
+            
+        print(f"Successfully retrieved directions with {len(directions.get('steps', []))} steps")
+        return jsonify(directions)
+        
+    except Exception as e:
+        print(f"Error in get-directions route: {str(e)}")
+        return jsonify({"error": f"Error getting directions: {str(e)}"}), 500
+
+
+@app.route('/api/text-to-speech', methods=['POST'])
+def text_to_speech():
+    try:
+        data = request.json
+        if not data or 'text' not in data:
+            return jsonify({'error': 'Missing required field: text'}), 400
+
+        text = data['text']
+        voice = data.get('voice', 'alloy')  # Default to 'alloy' voice
+        
+        if not OPENAI_API_KEY:
+            return jsonify({'error': 'OpenAI API key not found'}), 503
+
+        # Use OpenAI's text-to-speech API
+        response = openai_client.audio.speech.create(
+            model="tts-1",
+            voice=voice,
+            input=text
+        )
+        
+        # Get the audio content
+        audio_content = response.content
+        
+        # Return the audio content as a file
+        return send_file(
+            io.BytesIO(audio_content),
+            mimetype='audio/mpeg',
+            as_attachment=True,
+            download_name='speech.mp3'
+        )
+
+    except Exception as e:
+        print(f"Error in text-to-speech: {str(e)}")
+        return jsonify({'error': f'Error in text-to-speech: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
