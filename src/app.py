@@ -82,14 +82,22 @@ def save_transcript():
 def get_directions_route():
     data = request.json
     user_input = data.get("text")
+    current_location = data.get("currentLocation")
 
     if not user_input:
         return jsonify({"error": "Missing 'text' field in request"}), 400
 
+    # Extract destination from user input
     origin, destination = extract_origin_destination(user_input)
 
-    if not origin or not destination:
-        return jsonify({"error": "Could not extract origin or destination"}), 400
+    if not destination:
+        return jsonify({"error": "Could not extract destination"}), 400
+
+    # Use current location if available, otherwise use extracted origin
+    if current_location:
+        origin = f"{current_location['lat']},{current_location['lng']}"
+    elif not origin:
+        origin = "Current Location"  # Default to current location if not specified
 
     directions = get_directions(origin, destination)
     return jsonify(directions)
