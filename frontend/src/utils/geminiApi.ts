@@ -101,7 +101,7 @@ export async function transcribeAudioWithGemini(audioBlob: Blob): Promise<string
  */
 export async function saveTranscript(text: string, userId?: string): Promise<any> {
   try {
-    const response = await fetch('http://localhost:5000/api/save-transcript', {
+    const response = await fetch('https://transitcompanion.onrender.com/api/save-transcript', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ export async function getDirections(text: string, currentLocation?: { lat: numbe
   try {
     console.log(`Requesting directions for: "${text}"`, currentLocation ? `with location: ${JSON.stringify(currentLocation)}` : '');
     
-    const response = await fetch('http://localhost:5000/api/get-directions', {
+    const response = await fetch('https://transitcompanion.onrender.com/api/get-directions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -213,7 +213,7 @@ export async function saveDirections(origin: string, destination: string, direct
   try {
     console.log(`Saving directions from ${origin} to ${destination}`);
     
-    const response = await fetch('http://localhost:5000/api/save-directions', {
+    const response = await fetch('https://transitcompanion.onrender.com/api/save-directions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -35,7 +35,7 @@ export class TextToSpeech {
       this.stop();
 
       // Fetch the audio from the backend
-      const response = await fetch('http://localhost:5000/api/text-to-speech', {
+      const response = await fetch('https://transitcompanion.onrender.com/api/text-to-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
