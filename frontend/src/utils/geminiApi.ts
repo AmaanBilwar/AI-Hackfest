@@ -164,6 +164,13 @@ export async function getDirections(text: string, currentLocation?: { lat: numbe
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Error getting directions:', errorData);
+      
+      // If we have a fallback response, return it
+      if (errorData.fallback) {
+        console.log('Received fallback directions');
+        return errorData;
+      }
+      
       throw new Error(`Error getting directions: ${errorData.error || 'Unknown error'}`);
     }
     
@@ -176,7 +183,7 @@ export async function getDirections(text: string, currentLocation?: { lat: numbe
       throw new Error('Empty response from directions API');
     }
     
-    if (data.error) {
+    if (data.error && !data.fallback) {
       console.error('Error in directions response:', data.error);
       throw new Error(data.error);
     }
@@ -190,6 +197,44 @@ export async function getDirections(text: string, currentLocation?: { lat: numbe
     return data;
   } catch (error) {
     console.error('Error getting directions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Save directions to the backend
+ * @param origin - The origin location
+ * @param destination - The destination location
+ * @param directions - The directions data
+ * @param userInput - The original user input that led to these directions
+ * @returns The response from the backend
+ */
+export async function saveDirections(origin: string, destination: string, directions: any, userInput: string): Promise<any> {
+  try {
+    console.log(`Saving directions from ${origin} to ${destination}`);
+    
+    const response = await fetch('http://localhost:5000/api/save-directions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        origin,
+        destination,
+        directions,
+        user_input: userInput
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error saving directions:', errorData);
+      throw new Error(`Error saving directions: ${errorData.error || 'Unknown error'}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error saving directions:', error);
     throw error;
   }
 } 
