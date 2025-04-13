@@ -186,7 +186,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-sky-50 to-teal-50">
       <div className="w-full max-w-md px-4 py-8 flex flex-col items-center gap-6">
-        <h1 className="text-2xl font-semibold text-teal-800">Transit Companion</h1>
+        <h1 className="text-2xl font-semibold text-teal-800">SafeStep</h1>
 
         {hasFallbackDirections && (
           <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
