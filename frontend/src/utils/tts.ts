@@ -89,7 +89,12 @@ export function formatDirectionsForSpeech(directions: any): string {
   }
 
   try {
-    // Check if the directions object has the structure expected by the MapDirections component
+    // Use the new narrative format if available
+    if (directions.narrative) {
+      return directions.narrative;
+    }
+    
+    // Fallback to the old format if narrative is not available
     if (directions.steps && Array.isArray(directions.steps) && directions.steps.length > 0) {
       return directions.steps
         .map((step: any) => step?.instruction || "Continue")
