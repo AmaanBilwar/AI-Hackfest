@@ -56,8 +56,8 @@ npm install
 
 3. Create a `.env.local` file with the following variables:
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5000
-NEXT_PUBLIC_WS_URL=ws://localhost:5000
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+GOOGLE_MAPS_API_KEY=your_google_maps-api_key
 ```
 
 4. Start the development server:
@@ -135,7 +135,7 @@ SafeStep/
 
 1. Fork the repository
 2. Create a new branch
-3. Make your changes
+3. Make your changes (feel free to add new features that you think would help the users.)
 4. Submit a pull request
 
 ## 📝 License
@@ -144,7 +144,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👥 Authors
 
-- Your Name - Initial work
+- Amaan Bilwar
+- Sampreeth Addakula 
 
 ## 🙏 Acknowledgments
 
