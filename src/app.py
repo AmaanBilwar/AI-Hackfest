@@ -118,16 +118,124 @@ def get_directions_route():
         print(f"Getting directions from {origin} to {destination}")
         directions = get_directions(origin, destination)
         
+        # Check for specific error messages
         if "error" in directions:
-            print(f"Error getting directions: {directions['error']}")
+            error_msg = directions["error"]
+            print(f"Error getting directions: {error_msg}")
+            
+            # Handle "No directions found" error gracefully
+            if "No directions found" in error_msg:
+                # Create a fallback response with a friendly message
+                fallback_directions = {
+                    "origin": origin,
+                    "destination": destination,
+                    "distance": "Unknown",
+                    "duration": "Unknown",
+                    "steps": [
+                        {
+                            "instruction": f"I couldn't find specific directions to '{destination}'. Please try a more specific location or check the spelling.",
+                            "distance": "",
+                            "duration": "",
+                            "mode": "unknown"
+                        }
+                    ],
+                    "fallback": True
+                }
+                
+                # Save the fallback response to MongoDB
+                try:
+                    directions_document = {
+                        'origin': origin,
+                        'destination': destination,
+                        'directions': fallback_directions,
+                        'user_input': user_input,
+                        'timestamp': datetime.now().isoformat(),
+                        'created_at': datetime.now(),
+                        'error': error_msg
+                    }
+                    
+                    # Save to a separate collection for directions
+                    directions_collection = db["directions"]
+                    result = directions_collection.insert_one(directions_document)
+                    print(f"Saved fallback directions to MongoDB with ID: {result.inserted_id}")
+                except Exception as e:
+                    print(f"Error saving fallback directions to MongoDB: {str(e)}")
+                
+                return jsonify(fallback_directions)
+            
             return jsonify(directions), 400
             
         print(f"Successfully retrieved directions with {len(directions.get('steps', []))} steps")
+        
+        # Save directions to MongoDB
+        try:
+            directions_document = {
+                'origin': origin,
+                'destination': destination,
+                'directions': directions,
+                'user_input': user_input,
+                'timestamp': datetime.now().isoformat(),
+                'created_at': datetime.now()
+            }
+            
+            # Save to a separate collection for directions
+            directions_collection = db["directions"]
+            result = directions_collection.insert_one(directions_document)
+            print(f"Saved directions to MongoDB with ID: {result.inserted_id}")
+        except Exception as e:
+            print(f"Error saving directions to MongoDB: {str(e)}")
+            # Continue even if saving fails
+            
         return jsonify(directions)
         
     except Exception as e:
         print(f"Error in get-directions route: {str(e)}")
         return jsonify({"error": f"Error getting directions: {str(e)}"}), 500
+
+
+@app.route('/api/save-directions', methods=['POST'])
+def save_directions():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No JSON data received'}), 400
+            
+        origin = data.get('origin')
+        destination = data.get('destination')
+        directions = data.get('directions')
+        user_input = data.get('user_input')
+        
+        if not all([origin, destination, directions]):
+            return jsonify({'error': 'Missing required fields'}), 400
+            
+        document = {
+            'origin': origin,
+            'destination': destination,
+            'directions': directions,
+            'user_input': user_input,
+            'timestamp': datetime.now().isoformat(),
+            'created_at': datetime.now()
+        }
+        
+        # Save to a separate collection for directions
+        directions_collection = db["directions"]
+        result = directions_collection.insert_one(document)
+        
+        print(f"Saved directions to MongoDB with ID: {result.inserted_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Directions saved successfully to MongoDB',
+            'data': {
+                'id': str(result.inserted_id),
+                'origin': origin,
+                'destination': destination
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Error saving directions to MongoDB: {str(e)}")
+        return jsonify({'error': f'Error saving directions: {str(e)}'}), 500
 
 
 @app.route('/api/text-to-speech', methods=['POST'])
