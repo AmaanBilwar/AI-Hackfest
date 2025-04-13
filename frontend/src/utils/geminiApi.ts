@@ -148,6 +148,8 @@ function blobToBase64(blob: Blob): Promise<string> {
  */
 export async function getDirections(text: string, currentLocation?: { lat: number, lng: number }): Promise<any> {
   try {
+    console.log(`Requesting directions for: "${text}"`, currentLocation ? `with location: ${JSON.stringify(currentLocation)}` : '');
+    
     const response = await fetch('http://localhost:5000/api/get-directions', {
       method: 'POST',
       headers: {
@@ -165,7 +167,27 @@ export async function getDirections(text: string, currentLocation?: { lat: numbe
       throw new Error(`Error getting directions: ${errorData.error || 'Unknown error'}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log('Directions response:', data);
+    
+    // Validate the response data
+    if (!data) {
+      console.error('Empty response from directions API');
+      throw new Error('Empty response from directions API');
+    }
+    
+    if (data.error) {
+      console.error('Error in directions response:', data.error);
+      throw new Error(data.error);
+    }
+    
+    // Check if the response has the expected structure
+    if (!data.steps || !Array.isArray(data.steps)) {
+      console.error('Invalid directions response structure:', data);
+      throw new Error('Invalid directions response structure');
+    }
+    
+    return data;
   } catch (error) {
     console.error('Error getting directions:', error);
     throw error;
