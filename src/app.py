@@ -274,6 +274,64 @@ def text_to_speech():
         return jsonify({'error': f'Error in text-to-speech: {str(e)}'}), 500
 
 
+@app.route('/api/get-accessible-directions', methods=['POST'])
+def get_accessible_directions():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No JSON data received"}), 400
+            
+        user_input = data.get("text")
+        current_location = data.get("currentLocation")
+
+        if not user_input:
+            return jsonify({"error": "Missing 'text' field in request"}), 400
+
+        # Extract destination from user input
+        origin, destination = extract_origin_destination(user_input)
+
+        if not destination:
+            return jsonify({"error": "Could not extract destination"}), 400
+
+        # Use current location if available, otherwise use extracted origin
+        if current_location:
+            origin = f"{current_location['lat']},{current_location['lng']}"
+        elif not origin:
+            origin = "Current Location"
+
+        # Get detailed directions
+        directions = get_directions(origin, destination)
+        
+        # Generate speech for the narrative
+        if not OPENAI_API_KEY:
+            return jsonify({'error': 'OpenAI API key not found'}), 503
+
+        # Create a complete narrative that won't cause looping
+        narrative = directions.get("narrative", "No directions available.")
+        
+        # Use OpenAI's text-to-speech API for the narrative
+        response = openai_client.audio.speech.create(
+            model="tts-1",
+            voice="alloy",
+            input=narrative
+        )
+        
+        # Get the audio content
+        audio_content = response.content
+        
+        # Return the audio file directly without saving
+        return send_file(
+            io.BytesIO(audio_content),
+            mimetype='audio/mpeg',
+            as_attachment=True,
+            download_name='directions.mp3'
+        )
+
+    except Exception as e:
+        print(f"Error in get-accessible-directions: {str(e)}")
+        return jsonify({"error": f"Error getting accessible directions: {str(e)}"}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
 
