@@ -71,7 +71,7 @@ export default function MapDirections({ origin, destination, onDirectionsReceive
     }
     
     try {
-      const audioResponse = await fetch('http://localhost:5000/api/get-accessible-directions', {
+      const audioResponse = await fetch('https://transitcompanion.onrender.com/api/get-accessible-directions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
