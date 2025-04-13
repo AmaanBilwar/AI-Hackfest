@@ -138,4 +138,36 @@ function blobToBase64(blob: Blob): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+/**
+ * Get directions from the backend
+ * @param text - The transcribed text containing destination
+ * @param currentLocation - Optional current location coordinates
+ * @returns The directions data
+ */
+export async function getDirections(text: string, currentLocation?: { lat: number, lng: number }): Promise<any> {
+  try {
+    const response = await fetch('http://localhost:5000/api/get-directions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        currentLocation
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error getting directions:', errorData);
+      throw new Error(`Error getting directions: ${errorData.error || 'Unknown error'}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting directions:', error);
+    throw error;
+  }
 } 

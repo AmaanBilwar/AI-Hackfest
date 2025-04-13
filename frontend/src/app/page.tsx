@@ -12,9 +12,27 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number, lng: number } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get current location when component mounts
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Error getting current location:", error);
+        }
+      );
+    }
+  }, []);
 
   // Clean up resources when component unmounts
   useEffect(() => {
@@ -152,7 +170,10 @@ export default function Home() {
 
           <TranscriptionBox text={transcript} isActive={isRecording} />
 
-          <MapDirections origin="Current Location" destination={transcript ? transcript : "Select destination"} />
+          <MapDirections 
+            origin="Current Location" 
+            destination={transcript ? transcript : "Select destination"} 
+          />
 
           <Card className="w-full p-4 bg-white/80 backdrop-blur-sm border-teal-100">
             <div className="flex items-start gap-3">
