@@ -3,9 +3,45 @@ import os
 import re
 import json
 
-def get_detailed_instructions(step):
-    """Convert a step into detailed, accessible instructions."""
-    instruction = step.get("instruction", "")
+def get_landmark_near_step(lat, lng, api_key):
+    """Get notable landmarks near a navigation step."""
+    url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    params = {
+        "location": f"{lat},{lng}",
+        "radius": 50,  # Search within 50 meters
+        "type": ["point_of_interest", "store", "restaurant", "cafe", "park", "library", "museum"],
+        "key": api_key
+    }
+    
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        if data["status"] == "OK" and data["results"]:
+            # Return the most notable landmark (first result)
+            return data["results"][0]
+        return None
+    except Exception as e:
+        print(f"Error finding landmarks: {str(e)}")
+        return None
+
+def enhance_instruction_with_landmark(instruction, landmark):
+    """Add landmark reference to instruction."""
+    landmark_name = landmark["name"]
+    
+    # Basic pattern matching - could be improved with NLP
+    if "Turn right" in instruction:
+        return f"{instruction} (You'll see {landmark_name} on your right)"
+    elif "Turn left" in instruction:
+        return f"{instruction} (You'll see {landmark_name} on your left)"
+    elif "Continue" in instruction or "Head" in instruction or "Proceed" in instruction:
+        return f"{instruction} passing {landmark_name}"
+    else:
+        return f"{instruction} (Look for {landmark_name} nearby)"
+
+def get_detailed_instructions(step, api_key=None):
+    """Convert a step into detailed, accessible instructions with landmarks."""
+    instruction = step.get("html_instructions", "")
     distance = step.get("distance", {}).get("text", "")
     duration = step.get("duration", {}).get("text", "")
     travel_mode = step.get("travel_mode", "")
@@ -18,6 +54,36 @@ def get_detailed_instructions(step):
     
     # Add main instruction
     detailed_instructions.append(f"Step: {clean_instruction}")
+    
+    # Initialize landmarks list
+    landmarks = []
+    
+    # Check for landmarks near this step if API key is provided
+    if api_key and "start_location" in step and "end_location" in step:
+        # Calculate midpoint of this step
+        mid_lat = (step["start_location"]["lat"] + step["end_location"]["lat"]) / 2
+        mid_lng = (step["start_location"]["lng"] + step["end_location"]["lng"]) / 2
+        
+        # Get landmark near this step
+        landmark = get_landmark_near_step(mid_lat, mid_lng, api_key)
+        if landmark:
+            # Enhance instruction with landmark reference
+            enhanced = enhance_instruction_with_landmark(clean_instruction, landmark)
+            detailed_instructions[0] = f"Step: {enhanced}"
+            
+            # Add additional landmark context
+            landmark_types = landmark.get("types", [])
+            readable_types = [t.replace("_", " ") for t in landmark_types if t not in ["point_of_interest", "establishment"]]
+            if readable_types:
+                landmark_type = readable_types[0]
+                detailed_instructions.append(f"{landmark['name']} is a {landmark_type}")
+            
+            # Add landmark to landmarks list
+            landmarks.append({
+                "name": landmark["name"],
+                "types": landmark_types,
+                "location": landmark["geometry"]["location"]
+            })
     
     # Add distance and duration if available
     if distance:
@@ -51,7 +117,7 @@ def get_detailed_instructions(step):
         elif maneuver == "straight":
             detailed_instructions.append("Continue straight ahead")
     
-    return " ".join(detailed_instructions)
+    return " ".join(detailed_instructions), landmarks
 
 def get_directions(origin, destination):
     url = "https://maps.googleapis.com/maps/api/directions/json"
@@ -127,16 +193,25 @@ def get_directions(origin, destination):
         
         # Extract and process steps
         steps = []
+        all_landmarks = []
+        
         for i, step in enumerate(leg["steps"], 1):
-            detailed_instruction = get_detailed_instructions(step)
+            detailed_instruction, landmarks = get_detailed_instructions(step, api_key)
             
-            steps.append({
+            step_info = {
                 "step_number": i,
                 "instruction": detailed_instruction,
                 "distance": step["distance"]["text"] if "distance" in step else "",
                 "duration": step["duration"]["text"] if "duration" in step else "",
                 "mode": step["travel_mode"]
-            })
+            }
+            
+            # Add landmarks if available
+            if landmarks:
+                step_info["landmarks"] = landmarks
+                all_landmarks.extend(landmarks)
+            
+            steps.append(step_info)
 
         # Create a complete narrative
         narrative = f"Starting from {origin_address}. "
@@ -154,10 +229,12 @@ def get_directions(origin, destination):
             "distance": distance,
             "duration": duration,
             "steps": steps,
-            "narrative": narrative
+            "narrative": narrative,
+            "includes_landmarks": True,
+            "landmarks_count": len(all_landmarks)
         }
         
-        print(f"Successfully processed directions with {len(steps)} steps")
+        print(f"Successfully processed directions with {len(steps)} steps and {len(all_landmarks)} landmarks")
         return result
         
     except Exception as e:
